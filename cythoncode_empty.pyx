@@ -34,7 +34,13 @@ cdef extern from "stdint_compat.h":
     cdef int int_(double)
     cdef int int_(long double)
 
-cdef function(_namespace, int _idx):
+cdef int function(double * v_array, double * v0_array, int _idx) nogil:
+    cdef double v
+    cdef double v0
+    v0 = v0_array[_idx]
+    v = v_array[_idx]
+    v_array[_idx] = v
+    v0_array[_idx] = v0
     return 0
 
 def main(_namespace):
@@ -52,9 +58,6 @@ def main(_namespace):
     cdef double v
 
     for _idx in range(N):      
-        v0 = _array_neurongroup_v0[_idx]
-        v = _array_neurongroup_v[_idx]
-        _array_neurongroup_v[_idx] = 1.2
-        _array_neurongroup_v0[_idx] = 2.1
-        function(_namespace, _idx)
+
+        function(_array_neurongroup_v, _array_neurongroup_v0, _idx)
 
