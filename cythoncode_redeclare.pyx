@@ -34,17 +34,34 @@ cdef extern from "stdint_compat.h":
     cdef int int_(double)
     cdef int int_(long double)
 
-cdef unpack(_namespace, int _idx):
-    cdef double v0
-    cdef double v
+cdef struct statevariable_container:
+    double* v
+    double* v0
+
+cdef fill_statevariable_arrays(_namespace, statevariable_container* statevariables, int N):
     cdef _numpy.ndarray[double, ndim=1, mode='c'] _buf__array_neurongroup_v = _namespace['_array_neurongroup_v']    
     cdef double * _array_neurongroup_v = <double *> _buf__array_neurongroup_v.data
     cdef _numpy.ndarray[double, ndim=1, mode='c'] _buf__array_neurongroup_v0 = _namespace['_array_neurongroup_v0']
     cdef double * _array_neurongroup_v0 = <double *> _buf__array_neurongroup_v0.data
-    v0 = _array_neurongroup_v0[_idx]
-    v = _array_neurongroup_v[_idx]
-    _array_neurongroup_v[_idx] = 1.2
-    _array_neurongroup_v0[_idx] = 2.1
+    cdef int _idx
+
+    statevariables.v = <double *>malloc(N*sizeof(double))
+    statevariables.v0 = <double *>malloc(N*sizeof(double))
+
+    for _idx in range(N):
+        statevariables.v[_idx] = _array_neurongroup_v[_idx]
+        statevariables.v0[_idx] = _array_neurongroup_v0[_idx]
+
+    return 0
+
+
+cdef int unpack(int _idx, statevariable_container* statevariables) nogil:
+    cdef double v0
+    cdef double v
+    v0 = statevariables.v0[_idx]
+    v = statevariables.v[_idx]
+    statevariables.v0[_idx] = v0
+    statevariables.v[_idx] = v
     return 0
 
 def main(_namespace):
@@ -52,6 +69,9 @@ def main(_namespace):
     _var_N = _namespace["_var_N"]
     cdef int64_t N = _namespace["N"]
 
+    cdef statevariable_container *statevariables = <statevariable_container*>malloc(sizeof(statevariable_container))
+    fill_statevariable_arrays(_namespace, statevariables, N)
+
     for _idx in range(N):    
-        unpack(_namespace, _idx)
+        unpack(_idx, statevariables)
 
