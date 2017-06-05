@@ -81,11 +81,11 @@ cdef fill_odeiv2_system(_namespace, gsl_odeiv2_system *sys):
     sys.dimension = 2 
     sys.params = &tau 
 
-cdef fill_y_vector(_namespace, pointer_to_y* ystruct, int _idx):
+cdef fill_y_vector(_namespace, double ** y, int _idx):
 
-    ystruct.y = <double *>malloc(2 * sizeof(double))
-    if not ystruct.y:
-        raise MemoryError()
+    y[0] = <double *>malloc(2 * sizeof(double))
+    #if not ystruct.y:
+    #    raise MemoryError()
     cdef _numpy.ndarray[double, ndim=1, mode='c'] _buf__array_neurongroup_v = _namespace['_array_neurongroup_v']    
     cdef double * _array_neurongroup_v = <double *> _buf__array_neurongroup_v.data
     cdef _numpy.ndarray[double, ndim=1, mode='c'] _buf__array_neurongroup_v0 = _namespace['_array_neurongroup_v0']
@@ -94,19 +94,19 @@ cdef fill_y_vector(_namespace, pointer_to_y* ystruct, int _idx):
     cdef double v = _array_neurongroup_v[_idx]
     cdef double v0 = _array_neurongroup_v0[_idx]
 
-    ystruct.y[0] = v
-    ystruct.y[1] = v0
+    y[0][0] = v
+    y[0][1] = v0
 
     return 0
 
-cdef empty_y_vector(_namespace, pointer_to_y* ystruct, int _idx):
+cdef empty_y_vector(_namespace, double ** y, int _idx):
     cdef _numpy.ndarray[double, ndim=1, mode='c'] _buf__array_neurongroup_v = _namespace['_array_neurongroup_v']    
     cdef double * _array_neurongroup_v = <double *> _buf__array_neurongroup_v.data
     cdef _numpy.ndarray[double, ndim=1, mode='c'] _buf__array_neurongroup_v0 = _namespace['_array_neurongroup_v0']
     cdef double * _array_neurongroup_v0 = <double *> _buf__array_neurongroup_v0.data
 
-    cdef double v = ystruct.y[0]
-    cdef double v0 = ystruct.y[1]
+    cdef double v = y[0][0]
+    cdef double v0 = y[0][1]
 
     _array_neurongroup_v[_idx] = v
     _array_neurongroup_v0[_idx] = v0
@@ -176,7 +176,8 @@ def main(_namespace):
     #####################
     #######################
     #### ADDED MANUALLY
-    cdef pointer_to_y *ystruct = <pointer_to_y*>malloc(sizeof(pointer_to_y))
+    cdef double ** y = <double **>malloc(sizeof(double *))
+    #pointer_to_y *ystruct = <pointer_to_y*>malloc(sizeof(pointer_to_y))
     cdef gsl_odeiv2_system sys
     cdef gsl_odeiv2_driver * d
     sys.function = func
@@ -206,9 +207,9 @@ def main(_namespace):
             #####################
             #######################
             #### ADDED MANUALLY
-            fill_y_vector(_namespace, ystruct, _idx)
-            gsl_odeiv2_driver_apply(d, &t, t1, ystruct.y)
-            empty_y_vector(_namespace, ystruct, _idx)
+            fill_y_vector(_namespace, y, _idx)
+            gsl_odeiv2_driver_apply(d, &t, t1, y[0])
+            empty_y_vector(_namespace, y, _idx)
             #### END ADDED MANUALLY
             ###################
             #####################

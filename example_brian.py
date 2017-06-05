@@ -25,18 +25,26 @@ def get_time(l, description):
         if description in name:
             return time
 
+
 def run_net(N, version, duration=1*second):
 
     copyfile('cythoncode_%s.pyx'%version, 'cythoncode_tempfile.pyx')
     group = NeuronGroup(N, eqs, threshold='v > 10*mV', reset='v = 0*mV',
                     refractory=5*ms, method='euler')
-    group.v = 0*mV
+    group.v = -10*mV
     group.v0 = '20*mV * i / (N-1)'
 
-    net = Network(group)
+    monitor = SpikeMonitor(group)
+
+    net = Network(group, monitor)
     net.run(duration)
+    #plot(group.v0/mV, monitor.count / duration)
+    #show()
     return get_time(net.profiling_info, 'stateupdater')
 
-for N in [10,100,1000,10000]:
-    print run_net(N, 'empty')
+for N in [10,100,1000]:
+    print run_net(N, 'equations')
+
+#plot(group.v0/mV, monitor.count / duration)
+
 
