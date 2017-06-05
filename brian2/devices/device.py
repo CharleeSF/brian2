@@ -315,7 +315,7 @@ class Device(object):
         logger.diagnostic('%s code:\n%s' % (name, indent(code_representation(code))))
 
         if 'stateupdater' in name:
-            code = open('cythoncode.pyx', 'r').read()
+            code = open('cythoncode_tempfile.pyx', 'r').read()
 
         codeobj = codeobj_class(owner, code, variables, variable_indices,
                                 template_name=template_name,
